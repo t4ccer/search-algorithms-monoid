@@ -1,5 +1,6 @@
-import Algorithm.Search
+import Algorithm.Search.Monoid
 import Criterion.Main
+import Data.Monoid (Sum (Sum))
 
 type Position = (Int, Int)
 
@@ -14,10 +15,10 @@ neighbors (x, y) =
     , (x, y + 1)
     ]
 
-dist :: Position -> Position -> Int
-dist (x1, y1) (x2, y2) = abs (x2 - x1) + abs (y2 - y1)
+dist :: Position -> Position -> Sum Int
+dist (x1, y1) (x2, y2) = Sum (abs (x2 - x1) + abs (y2 - y1))
 
-aStarWall :: Int -> Maybe (Int, [Position])
+aStarWall :: Int -> Maybe (Sum Int, [Position])
 aStarWall height =
     aStar
         (neighbors `pruning` wall height) -- next

@@ -135,7 +135,7 @@ dfs =
  Just (67,[1,2,7,12,17,42,67])
 -}
 dijkstra ::
-    (Foldable f, Num cost, Ord cost, Ord state) =>
+    (Foldable f, Monoid cost, Ord cost, Ord state) =>
     -- | Function to generate list of neighboring states given the current state
     (state -> f state) ->
     -- | Function to generate transition costs between neighboring states. This is
@@ -169,7 +169,7 @@ dijkstra next cost found initial =
  solved state is possible.
 -}
 dijkstraAssoc ::
-    (Num cost, Ord cost, Ord state) =>
+    (Monoid cost, Ord cost, Ord state) =>
     -- | function to generate list of neighboring states with associated
     -- transition costs given the current state
     (state -> [(state, cost)]) ->
@@ -198,12 +198,12 @@ dijkstraAssoc next found initial =
             leastCostly
             next'
             (found . snd)
-            (0, initial)
+            (mempty, initial)
   where
     next' (old_cost, st) =
-        (\(new_st, new_cost) -> (new_cost + old_cost, new_st))
+        (\(new_st, new_cost) -> (new_cost <> old_cost, new_st))
             <$> (next st)
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states = (fst . last $ packed_states, map snd packed_states)
 
 {- | @aStar next cost remaining found initial@ performs a best-first search
@@ -228,7 +228,7 @@ dijkstraAssoc next found initial =
  Just (4,[(1,0),(1,1),(1,2),(0,2)])
 -}
 aStar ::
-    (Foldable f, Num cost, Ord cost, Ord state) =>
+    (Foldable f, Monoid cost, Ord cost, Ord state) =>
     -- | Function to generate list of neighboring states given the current state
     (state -> f state) ->
     -- | Function to generate transition costs between neighboring states. This is
@@ -265,7 +265,7 @@ aStar next cost remaining found initial =
  shortest path. Returns 'Nothing' if no path to a solved state is possible.
 -}
 aStarAssoc ::
-    (Num cost, Ord cost, Ord state) =>
+    (Monoid cost, Ord cost, Ord state) =>
     -- | function to generate list of neighboring states with associated
     -- transition costs given the current state
     (state -> [(state, cost)]) ->
@@ -296,16 +296,16 @@ aStarAssoc next remaining found initial =
             leastCostly
             next'
             (found . snd2)
-            (remaining initial, (0, initial))
+            (remaining initial, (mempty, initial))
   where
     next' (_, (old_cost, old_st)) =
         update_state <$> (next old_st)
       where
         update_state (new_st, cost) =
-            let new_cost = old_cost + cost
-                new_est = new_cost + remaining new_st
+            let new_cost = old_cost <> cost
+                new_est = new_cost <> remaining new_st
              in (new_est, (new_cost, new_st))
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states =
         (fst . snd . last $ packed_states, map snd2 packed_states)
     snd2 = snd . snd
@@ -356,7 +356,7 @@ dfsM =
  @next@, @cost@, and @found@ parameters.
 -}
 dijkstraM ::
-    (Monad m, Foldable f, Num cost, Ord cost, Ord state) =>
+    (Monad m, Foldable f, Monoid cost, Ord cost, Ord state) =>
     -- | Function to generate list of neighboring states given the current state
     (state -> m (f state)) ->
     -- | Function to generate list of costs between neighboring states. This is
@@ -379,21 +379,21 @@ dijkstraM nextM costM foundM initial =
             leastCostly
             nextM'
             (foundM . snd)
-            (0, initial)
+            (mempty, initial)
   where
     nextM' (old_cost, old_st) = do
         new_states <- Foldable.toList <$> nextM old_st
         incr_costs <- sequence $ costM old_st <$> new_states
-        let new_costs = (+ old_cost) <$> incr_costs
+        let new_costs = (<> old_cost) <$> incr_costs
         return $ zip new_costs new_states
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states = (fst . last $ packed_states, map snd packed_states)
 
 {- | @dijkstraAssocM@ is a monadic version of 'dijkstraAssoc': it has support
  for monadic @next@ and @found@ parameters.
 -}
 dijkstraAssocM ::
-    (Monad m, Num cost, Ord cost, Ord state) =>
+    (Monad m, Monoid cost, Ord cost, Ord state) =>
     -- | Function to generate list of neighboring states with associated
     -- transition costs given the current state
     (state -> m [(state, cost)]) ->
@@ -413,19 +413,19 @@ dijkstraAssocM nextM foundM initial =
             leastCostly
             nextM'
             (foundM . snd)
-            (0, initial)
+            (mempty, initial)
   where
-    nextM' (old_cost, old_st) = do
+    nextM' (_old_cost, old_st) = do
         new_states <- nextM old_st
         return $ map (\(x, y) -> (y, x)) new_states
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states = (fst . last $ packed_states, map snd packed_states)
 
 {- | @aStarM@ is a monadic version of 'aStar': it has support for monadic
  @next@, @cost@, @remaining@, and @found@ parameters.
 -}
 aStarM ::
-    (Monad m, Foldable f, Num cost, Ord cost, Ord state) =>
+    (Monad m, Foldable f, Monoid cost, Ord cost, Ord state) =>
     -- | function to generate list of neighboring states with associated
     -- transition costs given the current state
     (state -> m (f state)) ->
@@ -452,7 +452,7 @@ aStarM nextM costM remainingM foundM initial = do
             leastCostly
             nextM'
             (foundM . snd2)
-            (remaining_init, (0, initial))
+            (remaining_init, (mempty, initial))
   where
     nextM' (_, (old_cost, old_st)) = do
         new_states <- Foldable.toList <$> nextM old_st
@@ -461,10 +461,10 @@ aStarM nextM costM remainingM foundM initial = do
         update_stateM new_st = do
             remaining <- remainingM new_st
             cost <- costM old_st new_st
-            let new_cost = old_cost + cost
-                new_est = new_cost + remaining
+            let new_cost = old_cost <> cost
+                new_est = new_cost <> remaining
             return (new_est, (new_cost, new_st))
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states =
         (fst . snd . last $ packed_states, map snd2 packed_states)
     snd2 = snd . snd
@@ -473,7 +473,7 @@ aStarM nextM costM remainingM foundM initial = do
  monadic  @next@, @remaining@, and @found@ parameters.
 -}
 aStarAssocM ::
-    (Monad m, Num cost, Ord cost, Ord state) =>
+    (Monad m, Monoid cost, Ord cost, Ord state) =>
     -- | function to generate list of neighboring states with associated
     -- transition costs given the current state
     (state -> m [(state, cost)]) ->
@@ -496,7 +496,7 @@ aStarAssocM nextM remainingM foundM initial = do
             leastCostly
             nextM'
             (foundM . snd2)
-            (remaining_init, (0, initial))
+            (remaining_init, (mempty, initial))
   where
     nextM' (_, (old_cost, old_st)) = do
         new_states <- nextM old_st
@@ -504,10 +504,10 @@ aStarAssocM nextM remainingM foundM initial = do
       where
         update_stateM new_st = do
             remaining <- remainingM (fst new_st)
-            let new_cost = old_cost + (snd new_st)
-                new_est = new_cost + remaining
+            let new_cost = old_cost <> (snd new_st)
+                new_est = new_cost <> remaining
             return (new_est, (new_cost, fst new_st))
-    unpack [] = (0, [])
+    unpack [] = (mempty, [])
     unpack packed_states =
         (fst . snd . last $ packed_states, map snd2 packed_states)
     snd2 = snd . snd

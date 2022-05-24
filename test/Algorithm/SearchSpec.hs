@@ -8,6 +8,8 @@ import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 import Test.Hspec
 
+import Data.Monoid (Sum (Sum))
+
 main :: IO ()
 main = hspec spec
 
@@ -38,12 +40,12 @@ acyclicUnweightedGraph =
         ]
 
 -- | Example cyclic directed weighted graph
-cyclicWeightedGraph :: Map.Map Char [(Char, Int)]
+cyclicWeightedGraph :: Map.Map Char [(Char, Sum Int)]
 cyclicWeightedGraph =
     Map.fromList
-        [ ('a', [('b', 1), ('c', 2)])
-        , ('b', [('a', 1), ('c', 2), ('d', 5)])
-        , ('c', [('a', 1), ('d', 2)])
+        [ ('a', [('b', Sum 1), ('c', Sum 2)])
+        , ('b', [('a', Sum 1), ('c', Sum 2), ('d', Sum 5)])
+        , ('c', [('a', Sum 1), ('d', Sum 2)])
         , ('d', [])
         ]
 
@@ -55,15 +57,15 @@ taxicabNeighbors (x, y) = [(x, y + 1), (x - 1, y), (x, y - 1), (x + 1, y)]
 isWall :: (Int, Int) -> Bool
 isWall (x, y) = x == 1 && ((-2) <= y && y <= 1)
 
-taxicabDistance :: (Int, Int) -> (Int, Int) -> Int
-taxicabDistance (x1, y1) (x2, y2) = abs (x2 - x1) + abs (y2 - y1)
+taxicabDistance :: (Int, Int) -> (Int, Int) -> Sum Int
+taxicabDistance (x1, y1) (x2, y2) = Sum (abs (x2 - x1) + abs (y2 - y1))
 
 taxicabNeighborsBounded :: (Int, Int) -> Maybe [(Int, Int)]
 taxicabNeighborsBounded (x, y)
     | outOfBounds (x, y) = Nothing
     | otherwise = Just $ taxicabNeighbors (x, y)
 
-taxicabDistanceBounded :: (Int, Int) -> (Int, Int) -> Maybe Int
+taxicabDistanceBounded :: (Int, Int) -> (Int, Int) -> Maybe (Sum Int)
 taxicabDistanceBounded (x1, y1) (x2, y2)
     | outOfBounds (x1, y1) || outOfBounds (x2, y2) = Nothing
     | otherwise = Just $ taxicabDistance (x1, y1) (x2, y2)
@@ -221,7 +223,7 @@ spec = do
                 `shouldBe` Nothing
             dijkstraM
                 taxicabNeighborsBounded
-                ((const . const) Nothing :: (Int, Int) -> (Int, Int) -> Maybe Int)
+                ((const . const) Nothing :: (Int, Int) -> (Int, Int) -> Maybe (Sum Int))
                 (return . (== end))
                 start
                 `shouldBe` Nothing
@@ -260,7 +262,7 @@ spec = do
                 `shouldBe` Nothing
             aStarM
                 taxicabNeighborsBounded
-                ((const . const) Nothing :: (Int, Int) -> (Int, Int) -> Maybe Int)
+                ((const . const) Nothing :: (Int, Int) -> (Int, Int) -> Maybe (Sum Int))
                 (taxicabDistanceBounded end)
                 (return . (== end))
                 start
