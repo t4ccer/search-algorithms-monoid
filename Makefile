@@ -28,7 +28,7 @@ format_check:
 
 
 # Apply hlint suggestions
-lint: requires_nix_shell
+lint:
 	find -name '*.hs' -not -path './dist-*/*' -exec hlint --refactor --refactor-options="--inplace" {} \;
 
 # Check hlint suggestions

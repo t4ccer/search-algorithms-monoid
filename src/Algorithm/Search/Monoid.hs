@@ -202,7 +202,7 @@ dijkstraAssoc next found initial =
   where
     next' (old_cost, st) =
         (\(new_st, new_cost) -> (new_cost <> old_cost, new_st))
-            <$> (next st)
+            <$> next st
     unpack [] = (mempty, [])
     unpack packed_states = (fst . last $ packed_states, map snd packed_states)
 
@@ -299,7 +299,7 @@ aStarAssoc next remaining found initial =
             (remaining initial, (mempty, initial))
   where
     next' (_, (old_cost, old_st)) =
-        update_state <$> (next old_st)
+        update_state <$> next old_st
       where
         update_state (new_st, cost) =
             let new_cost = old_cost <> cost
@@ -504,7 +504,7 @@ aStarAssocM nextM remainingM foundM initial = do
       where
         update_stateM new_st = do
             remaining <- remainingM (fst new_st)
-            let new_cost = old_cost <> (snd new_st)
+            let new_cost = old_cost <> snd new_st
                 new_est = new_cost <> remaining
             return (new_est, (new_cost, fst new_st))
     unpack [] = (mempty, [])
@@ -605,7 +605,7 @@ pruning ::
     -- | Version of @next@ which excludes elements satisfying @predicate@
     (a -> [a])
 next `pruning` predicate =
-    (filter (not . predicate) . Foldable.toList) <$> next
+    filter (not . predicate) . Foldable.toList <$> next
 
 {- | @pruningM@ is a monadic version of 'pruning': it has support for monadic
  @next@ and @predicate@ parameters
