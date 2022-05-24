@@ -1,13 +1,12 @@
-module Algorithm.SearchSpec (
+module Algorithm.Search.MonoidSpec (
     main,
     spec,
 ) where
 
-import Algorithm.Search
+import Algorithm.Search.Monoid
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 import Test.Hspec
-
 import Data.Monoid (Sum (Sum))
 
 main :: IO ()

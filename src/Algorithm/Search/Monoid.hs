@@ -8,7 +8,7 @@
  states, a way of generating associated information, a way of determining
  when you have found a solution, and an initial state.
 -}
-module Algorithm.Search (
+module Algorithm.Search.Monoid (
     -- * Searches
     bfs,
     dfs,

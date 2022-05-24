@@ -1,16 +1,17 @@
-name:               search-algorithms
+name:               search-algorithms-monoid
 version:            0.3.2
-synopsis:           Common graph search algorithms
+synopsis:           Common graph search algorithms, generalized
 description:
   Library containing common graph search algorithms,
   including depth-first and breadth-first searches,
-  Dijkstra's algorithm, and A*
+  Dijkstra's algorithm, and A*, generalized to operate
+  on monoids.
 
-homepage:           https://github.com/devonhollowood/search-algorithms#readme
+homepage:           https://github.com/t4ccer/search-algorithms-monoid#readme
 license:            BSD3
 license-file:       LICENSE
-author:             Devon Hollowood
-maintainer:         devonhollowood@gmail.com
+author:             Tomasz Maciosowski <t4ccer>
+maintainer:         t4ccer@gmail.com
 copyright:          2017 Devon Hollowood
 category:           Algorithm
 build-type:         Simple
@@ -22,7 +23,7 @@ cabal-version:      >=1.10
 
 library
   hs-source-dirs:   src
-  exposed-modules:  Algorithm.Search
+  exposed-modules:  Algorithm.Search.Monoid
   build-depends:
       base        >=4.7 && <5
     , containers  >=0.5 && <0.7
@@ -34,12 +35,12 @@ test-suite search-algorithms-test
   type:             exitcode-stdio-1.0
   hs-source-dirs:   test
   main-is:          Spec.hs
-  other-modules:    Algorithm.SearchSpec
+  other-modules:    Algorithm.Search.MonoidSpec
   build-depends:
       base
     , containers         >=0.5
     , hspec              >=2.2
-    , search-algorithms
+    , search-algorithms-monoid
 
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
@@ -51,11 +52,11 @@ benchmark search-algorithms-benchmark
   build-depends:
       base
     , criterion
-    , search-algorithms
+    , search-algorithms-monoid
 
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
   default-language: Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/devonhollowood/search-algorithms
+  location: https://github.com/t4ccer/search-algorithms-monoid
